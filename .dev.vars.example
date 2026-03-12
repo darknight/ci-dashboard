@@ -1,0 +1,3 @@
+GITHUB_TOKEN=github_pat_your_token_here
+GITHUB_OWNER=darknight
+GITHUB_REPOS=daily-digest,whoishiring-insight,railway-services
