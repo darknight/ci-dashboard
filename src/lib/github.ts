@@ -32,6 +32,7 @@ export interface RepoSummary {
 export interface RepoDetail {
 	name: string;
 	workflows: WorkflowWithRuns[];
+	error?: string;
 }
 
 class GitHubAPIError extends Error {
@@ -157,7 +158,8 @@ export async function getAllRepoDetails(
 
 	const data = results.map((result, i) => {
 		if (result.status === 'fulfilled') return result.value;
-		return { name: repos[i], workflows: [] };
+		const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+		return { name: repos[i], workflows: [], error: errorMsg };
 	});
 
 	cache = { data, timestamp: Date.now() };

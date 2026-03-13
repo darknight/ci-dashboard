@@ -46,7 +46,12 @@
 
 		<main class="flex-1 overflow-y-auto p-6">
 			{#if activeDetail}
-				{#if activeDetail.workflows.length === 0}
+				{#if activeDetail.error}
+					<div class="rounded-md border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+						<p class="font-semibold">Failed to load workflows</p>
+						<p class="mt-1 text-sm">{activeDetail.error}</p>
+					</div>
+				{:else if activeDetail.workflows.length === 0}
 					<p class="text-muted-foreground">No active workflows found for this repo.</p>
 				{:else}
 					{#each activeDetail.workflows as workflow}
