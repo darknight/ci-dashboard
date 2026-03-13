@@ -13,3 +13,5 @@ build
 plans/
 
 SPEC.md
+
+.playwright-mcp/

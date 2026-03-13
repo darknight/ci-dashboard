@@ -52,6 +52,7 @@ async function githubFetch(path: string, token: string, options?: RequestInit): 
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
 			'X-GitHub-Api-Version': '2022-11-28',
+			'User-Agent': 'ci-dashboard',
 			...options?.headers
 		}
 	});
