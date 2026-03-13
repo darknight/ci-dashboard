@@ -10,4 +10,4 @@ binding = "ASSETS"
 
 [vars]
 GITHUB_OWNER = "darknight"
-GITHUB_REPOS = "daily-digest,whoishiring-insight"
+GITHUB_REPOS = "daily-digest,whoishiring-insight,ci-dashboard"
