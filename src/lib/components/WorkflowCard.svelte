@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { WorkflowWithRuns } from '$lib/github';
+	import type { Poller } from '$lib/poll.svelte';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import StatusBadge from './StatusBadge.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { getContext } from 'svelte';
+
+	const poller = getContext<Poller>('poller');
 
 	let { workflow, repo }: { workflow: WorkflowWithRuns; repo: string } = $props();
 
@@ -51,8 +54,8 @@
 			});
 			const data = await res.json();
 			if (data.success) {
-				triggerMessage = 'Triggered! Refreshing...';
-				setTimeout(() => invalidateAll(), 2000);
+				triggerMessage = 'Triggered! Monitoring...';
+				setTimeout(() => poller.startPolling(repo), 3000);
 			} else {
 				triggerMessage = 'Failed: ' + (data.error || 'Unknown error');
 			}
@@ -73,7 +76,7 @@
 			});
 			const data = await res.json();
 			if (data.success) {
-				setTimeout(() => invalidateAll(), 2000);
+				setTimeout(() => poller.startPolling(repo), 3000);
 			}
 		} finally {
 			rerunningId = null;

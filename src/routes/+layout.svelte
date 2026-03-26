@@ -7,17 +7,36 @@
 	import { deriveHealth } from '$lib/github';
 	import type { RepoDetail } from '$lib/github';
 	import type { Snippet } from 'svelte';
+	import { setContext, onDestroy } from 'svelte';
+	import { createPoller, hasActiveRuns } from '$lib/poll.svelte';
 
 	let { data, children }: { data: { repoDetails: RepoDetail[] }; children: Snippet } = $props();
 
 	let activeRepo = $state(data.repoDetails[0]?.name ?? '');
 	let refreshing = $state(false);
 
-	const repos = $derived(
-		data.repoDetails.map((d) => ({ name: d.name, health: deriveHealth(d.workflows) }))
+	const poller = createPoller();
+	setContext('poller', poller);
+
+	const mergedRepoDetails = $derived(
+		data.repoDetails.map((d) => poller.getUpdate(d.name) ?? d)
 	);
 
-	const activeDetail = $derived(data.repoDetails.find((d) => d.name === activeRepo));
+	const repos = $derived(
+		mergedRepoDetails.map((d) => ({ name: d.name, health: deriveHealth(d.workflows) }))
+	);
+
+	const activeDetail = $derived(mergedRepoDetails.find((d) => d.name === activeRepo));
+
+	$effect(() => {
+		for (const detail of mergedRepoDetails) {
+			if (hasActiveRuns(detail)) {
+				poller.startPolling(detail.name);
+			}
+		}
+	});
+
+	onDestroy(() => poller.stopAll());
 
 	function handleSelectRepo(name: string) {
 		activeRepo = name;
@@ -25,6 +44,7 @@
 
 	async function handleRefresh() {
 		refreshing = true;
+		poller.stopAll();
 		await fetch('/api/refresh', { method: 'POST' });
 		await invalidateAll();
 		refreshing = false;
@@ -39,9 +59,16 @@
 			<h2 class="text-lg font-semibold">
 				{activeRepo || 'Dashboard'}
 			</h2>
-			<Button variant="outline" size="sm" onclick={handleRefresh} disabled={refreshing}>
-				{refreshing ? 'Refreshing...' : 'Refresh'}
-			</Button>
+			<div class="flex items-center gap-3">
+				{#if poller.activePolls > 0}
+					<span class="text-xs text-muted-foreground animate-pulse">
+						Auto-refreshing {poller.activePolls} repo{poller.activePolls > 1 ? 's' : ''}
+					</span>
+				{/if}
+				<Button variant="outline" size="sm" onclick={handleRefresh} disabled={refreshing}>
+					{refreshing ? 'Refreshing...' : 'Refresh'}
+				</Button>
+			</div>
 		</header>
 
 		<main class="flex-1 overflow-y-auto p-6">
